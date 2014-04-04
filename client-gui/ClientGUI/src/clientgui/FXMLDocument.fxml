@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="549.999800000005" prefWidth="780.0000999999975" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="clientgui.FXMLDocumentController">
+  <children>
+    <ScrollPane fx:id="SYMB_scrollPane_fxid" content="$null" hbarPolicy="NEVER" layoutX="14.0" layoutY="36.0" prefHeight="389.0" prefWidth="143.0" vbarPolicy="AS_NEEDED" />
+    <ScrollPane fx:id="past24_scrollPane_fxid" content="$null" hbarPolicy="NEVER" layoutX="204.0" layoutY="36.0" prefHeight="389.0" prefWidth="143.0" vbarPolicy="AS_NEEDED" />
+    <ScrollPane fx:id="post24_scrollPane_fxid" content="$null" hbarPolicy="NEVER" layoutX="384.0" layoutY="36.0" prefHeight="389.0" prefWidth="143.0" vbarPolicy="AS_NEEDED" />
+    <Label layoutX="47.0" layoutY="17.0" text="Stock Symbols" />
+    <Label layoutX="247.0" layoutY="17.0" text="Past 24 hrs" />
+    <Label layoutX="426.0" layoutY="17.0" text="Post 24 hrs" />
+    <Button fx:id="del_stock_btn" layoutX="14.0" layoutY="435.0" mnemonicParsing="false" onAction="#deleteBtn_action" text="Delete Selected Stock" />
+    <Button fx:id="reset_stock_btn" layoutX="14.0" layoutY="463.0" mnemonicParsing="false" onAction="#resetBtn_action" text="Reset Selected Stock Data" />
+    <Button fx:id="connect_btn" layoutX="591.0" layoutY="298.0" mnemonicParsing="false" onAction="#connectBtn_action" text="Connect" />
+    <Button fx:id="disconnect_btn" layoutX="591.0" layoutY="327.0" mnemonicParsing="false" onAction="#disconnectBtn_action" text="Disconnect" />
+    <Label layoutX="591.0" layoutY="275.0" text="Connection Info" />
+    <TextField fx:id="AddStockTF_fxid" layoutX="634.0" layoutY="38.0" prefWidth="100.0" />
+    <Button fx:id="AddStockBtn_fxid" layoutX="659.0" layoutY="98.0" mnemonicParsing="false" onAction="#AddStockBtn_action" text="Add Stock" />
+    <Label layoutX="655.0" layoutY="19.0" text="Add Stock" />
+    <Label fx:id="AddStockLabel_fxid" layoutX="634.0" layoutY="139.0" text="AddStock Err Label" />
+    <ComboBox fx:id="AddStockCB_fxid" layoutX="551.0" layoutY="67.0" onAction="#test_action" prefHeight="21.0" prefWidth="183.0">
+      <items>
+        <FXCollections fx:factory="observableArrayList">
+          <String fx:value="Item 1" />
+          <String fx:value="Item 2" />
+          <String fx:value="Item 3" />
+        </FXCollections>
+      </items>
+    </ComboBox>
+    <Label fx:id="DelResetLabel_fxid" layoutX="14.0" layoutY="493.0" text="Delete/Reset label" />
+    <Label fx:id="connectLabel_fxid" layoutX="591.0" layoutY="360.0" text="Label" />
+  </children>
+</AnchorPane>
