@@ -6,16 +6,43 @@
 
 package clientgui;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
@@ -23,18 +50,24 @@ import javafx.scene.control.TextField;
  */
 public class FXMLDocumentController implements Initializable {
     
-    private String[] suffix = { ".CBT", ".CME", ".NYB", ".CMX", ".NYM", ".OB", ".PK", "BA",
+    private final String key = "SemperVigilisEst";
+    
+    public Socket socket;
+    public DataInputStream dis;
+    public DataOutputStream dos;
+    
+    private String[] suffix = { "", ".CBT", ".CME", ".NYB", ".CMX", ".NYM", ".OB", ".PK", "BA",
         ".VI", ".AX", ".BR", ".SA", ".TO", ".V", ".SN", ".SS", ".SZ", ".CO", ".NX", ".PA",
         ".BE", ".BM", ".DU", ".F", ".HM", ".HA", ".MU", ".SG", ".DE", ".HK", ".BO", ".NS",
         ".JK", ".TA", ".MI", ".MX", ".AS", ".NZ", ".OL", ".LS", ".SI", ".KS", ".KQ", ".BC",
         ".BI", ".MF", ".MC", ".MA", ".ST", ".SW", ".TWO", "TW", ".L"
     };
 
-    //  Scroll panes
+    //  list views
     @FXML
-    public ScrollPane SYMB_scrollPane_fxid;
-    public ScrollPane past24_scrollPane_fxid;
-    public ScrollPane post24_scrollPane_fxid;
+    public ListView listView_01_fxid;
+    public ListView listView_02_fxid;
+    public ListView listView_03_fxid;
     
     //  add stock stuff
     @FXML
@@ -52,40 +85,182 @@ public class FXMLDocumentController implements Initializable {
     public Button disconnect_btn;
     
     @FXML
+    public TextField netAddr_fxid;
+    public TextField username_fxid;
+    @FXML
+    public PasswordField password_fxid;
+    
+    @FXML
     public Label connectLabel_fxid ;
     
     //  delete/reset stock stuff
     @FXML
+    public Button refresh_btn_fxid;
     public Button del_stock_btn;
     public Button reset_stock_btn;
     
     @FXML
     public Label DelResetLabel_fxid;
     
+    //  User/Pass stuff
+   
     
     @FXML 
-    protected void AddStockBtn_action(ActionEvent event) {
-        AddStockLabel_fxid.setText("Add symb button pressed");
+    protected void AddStockBtn_action(ActionEvent event) throws GeneralSecurityException {   
+        if( socket != null && socket.isConnected() ){
+            
+            String data = AddStockTF_fxid.getText();
+            data = data.replaceAll(",", "");
+            data = data.replaceAll(" ", "");
+            
+            if( data.isEmpty() || data == null ){
+                AddStockLabel_fxid.setText("Invalid data format");
+                return;
+            }
+            
+            if( AddStockCB_fxid.getSelectionModel().getSelectedIndex() > 0 ){
+                data += suffix[ AddStockCB_fxid.getSelectionModel().getSelectedIndex() ];
+            }
+            
+            try {
+                String msg = ( "200,, " + data );
+                byte[] msgCrypt = encrypt(key, msg);
+                dos.writeInt(msgCrypt.length);
+                dos.write(msgCrypt);
+            } catch (IOException ex) {
+                System.out.println("Controller:addStockBtn exception");
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }else{
+            AddStockLabel_fxid.setText("Not connected to server");
+        }
+        
     }
     
     @FXML 
     protected void connectBtn_action(ActionEvent event) {
-        connectLabel_fxid.setText("Connecting...");
+        connectLabel_fxid.setText("Connecting..."); 
+            try {
+                String addr = netAddr_fxid.getText().replaceAll(",", "");
+                String user = username_fxid.getText().replaceAll(",", "");
+                String pass = password_fxid.getText().replaceAll(",", "");
+                
+                if( addr == null || user == null || pass == null ||
+                        addr.isEmpty() || user.isEmpty() || pass.isEmpty() ){
+                    connectLabel_fxid.setText("Fill out all fields");
+                    return;
+                }
+                socket = new Socket( addr, 717);
+                dos = new DataOutputStream(socket.getOutputStream() );
+                dis = new DataInputStream(socket.getInputStream() );
+                
+                InboundListener listener = new InboundListener(this, dis, dos);
+                Thread t20 = new Thread(listener);
+                t20.start();
+                
+                String hello = "100,, " + user + ",, " + pass;   
+                byte[] helloCrypt = encrypt(key, hello);
+                dos.writeInt(helloCrypt.length);
+                dos.write(helloCrypt);
+
+                if( socket.isConnected()) connectLabel_fxid.setText("Connected.");
+                
+            } catch (IOException ex) {
+                System.out.println("Failed to connect to localhost");
+                connectLabel_fxid.setText("Failed to connect");
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (GeneralSecurityException ex) {
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     @FXML 
     protected void disconnectBtn_action(ActionEvent event) {
-        connectLabel_fxid.setText("Disconnected.");
+        if( socket != null && socket.isConnected() ){
+          try {
+                String goodbye = "500";
+                
+                byte[] msgCrypt = encrypt(key, goodbye);
+                dos.writeInt(msgCrypt.length);
+                dos.write(msgCrypt);
+                 
+                socket.close();
+               connectLabel_fxid.setText("Disconnected.");
+            } catch (IOException ex) {
+                connectLabel_fxid.setText("Error disconnecting");
+              Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (GeneralSecurityException ex) {
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }else{
+            connectLabel_fxid.setText("Please connect");
+        }
+    }
+    
+    @FXML 
+    protected void refreshBtn_action(ActionEvent event) {   
+        if( socket != null && socket.isConnected() ){
+            String msg = "220";
+            try {
+                byte[] msgCrypt = encrypt(key, msg);
+                dos.writeInt(msgCrypt.length);
+                dos.write(msgCrypt);
+                DelResetLabel_fxid.setText("Refresh stocks.");
+            } catch (IOException ex) {
+                DelResetLabel_fxid.setText("Error sending 220.");
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (GeneralSecurityException ex) {
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }else{
+            DelResetLabel_fxid.setText("Please connect");
+        }
     }
     
     @FXML 
     protected void deleteBtn_action(ActionEvent event) {
-        DelResetLabel_fxid.setText("Delete Stock.");
+       if( socket != null && socket.isConnected() ){
+            try {
+                int index = listView_01_fxid.getSelectionModel().getSelectedIndex();
+                String symb = (String) listView_01_fxid.getItems().get( index );      
+                String msg = "450,, " + symb;
+                byte[] msgCrypt = encrypt(key, msg);
+                dos.writeInt(msgCrypt.length);
+                dos.write(msgCrypt);
+                
+                DelResetLabel_fxid.setText("Delete Stock ");
+            } catch (IOException ex) {
+                DelResetLabel_fxid.setText("Delete Stock exception.");
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (GeneralSecurityException ex) {
+               Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+           }
+        }else{
+            DelResetLabel_fxid.setText("Please connect");
+        }
     }
     
     @FXML 
     protected void resetBtn_action(ActionEvent event) {
-        DelResetLabel_fxid.setText("Reset Stock.");
+        if( socket != null && socket.isConnected() ){
+            try {
+                int index = listView_01_fxid.getSelectionModel().getSelectedIndex();
+                String symb = (String) listView_01_fxid.getItems().get( index );      
+                String msg = "400,, " + symb;
+                byte[] msgCrypt = encrypt(key, msg);
+                dos.writeInt(msgCrypt.length);
+                dos.write(msgCrypt);
+                
+                DelResetLabel_fxid.setText("Reset Stock ");
+            } catch (IOException ex) {
+                DelResetLabel_fxid.setText("Reset Stock exception.");
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (GeneralSecurityException ex) {
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }else{
+            DelResetLabel_fxid.setText("Please connect");
+        }
     }
     
     @FXML 
@@ -104,6 +279,7 @@ public class FXMLDocumentController implements Initializable {
     private void addMarkets(){
         AddStockCB_fxid.getItems().clear();
         
+        AddStockCB_fxid.getItems().add( "US Market(no append)" );
         AddStockCB_fxid.getItems().add( "Chicago Board of Trade" );
         AddStockCB_fxid.getItems().add( "Chicago Mercantile Exchange" );
         AddStockCB_fxid.getItems().add( "New York Board of Trade" );
@@ -164,9 +340,327 @@ public class FXMLDocumentController implements Initializable {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
-        
-        addMarkets();
+        addMarkets();  
+        setListener();
+        password_fxid.setText( "FoxtrotMikeLima" );
     }    
     
+    public void setListener(){
+        listView_01_fxid.getSelectionModel().selectedItemProperty().addListener(list_1_listener);
+    }
+    
+    public void removeListener(){
+        listView_01_fxid.getSelectionModel().selectedItemProperty().removeListener(list_1_listener);
+       
+    }
+    
+    /*
+     System.out.println( "Start: " + listView_01_fxid.getItems().size());
+        for( int ii = listView_01_fxid.getItems().size(); ii > 0 ; ii-- ){
+            System.out.println( ii + " " + listView_01_fxid.getItems().size());
+            listView_01_fxid.getItems().remove(ii-1);
+            
+        }
+        System.out.println( "Final: " + listView_01_fxid.getItems().size());
+    */
+
+    ChangeListener list_1_listener = new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> ov, String t, String t1) {
+                try {
+                    int index = listView_01_fxid.getSelectionModel().getSelectedIndex();
+                    String symb = (String) listView_01_fxid.getItems().get( index );
+             
+                    System.out.println("CLIENT:SELECT stock : " + symb);
+
+                    String request = "300,, " + symb;
+                     byte[] msgCrypt = encrypt(key, request);
+                    dos.writeInt(msgCrypt.length);
+                    dos.write(msgCrypt);      
+                } catch (IOException ex) {
+                    connectLabel_fxid.setText("Error disconnecting");
+                    Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (GeneralSecurityException ex) {
+                    Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+    
+     public byte[] encrypt(String key, String value)
+			throws GeneralSecurityException {
+
+		byte[] raw = key.getBytes(Charset.forName("US-ASCII"));
+		if (raw.length != 16) {
+			throw new IllegalArgumentException("Invalid key size.");
+		}
+
+		SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.ENCRYPT_MODE, skeySpec,
+				new IvParameterSpec(new byte[16]));
+		return cipher.doFinal(value.getBytes(Charset.forName("US-ASCII")));
+	}
+
+	public String decrypt(String key, byte[] encrypted)
+			throws GeneralSecurityException {
+
+		byte[] raw = key.getBytes(Charset.forName("US-ASCII"));
+		if (raw.length != 16) {
+			throw new IllegalArgumentException("Invalid key size.");
+		}
+		SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
+
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.DECRYPT_MODE, skeySpec,
+				new IvParameterSpec(new byte[16]));
+		byte[] original = cipher.doFinal(encrypted);
+
+		return new String(original, Charset.forName("US-ASCII"));
+	}
+    
+    public class InboundListener implements Runnable{
+        
+        final FXMLDocumentController pointer;
+        public DataInputStream dis;
+        public DataOutputStream dos;
+        
+        private final String key = "SemperVigilisEst";
+    
+        public InboundListener( FXMLDocumentController inPointer,
+                 DataInputStream indis,
+                     DataOutputStream indos ){
+            pointer = inPointer;
+            dis = indis;
+            dos = indos;
+        }
+
+        @Override
+        public void run() {
+            try {
+                int failures = 0;
+                while( true ){
+                    try{
+                        int len = dis.readInt();
+			if( len > 0 ){
+                            byte[] msg = new byte[len];
+                            dis.readFully(msg, 0, len);
+					
+                            String data = decrypt( key, msg );
+                            System.out.println( "CLIENT: " + data );
+                            parseData( data );
+                        }else if( len == -1){
+                            break;
+                        }
+                    } catch (Exception e){
+                        System.out.println("CLIENT failed to read data from server");
+                        System.out.println("CLIENT failure " + ++failures);
+                        e.printStackTrace();
+                    }
+                    
+                    if( failures > 20 ){
+                        socket.close();
+			Thread.currentThread().join();
+                    }
+                }
+            } catch (IOException ex) {
+                System.out.println("CLIENT I/O failure");
+                //    Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (InterruptedException ex) {
+                    System.out.println("Failure to close InboundListener thread");
+                    Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }    
+        
+        private void parseData( String data ){
+            final String[] sa = data.split(",, ");
+            
+            
+            if( sa[0].equals("101") ){
+                System.out.println("CLIENT: authorized");
+                Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        pointer.connectLabel_fxid.setText("Connected-Authorized");
+                   }
+               });
+                
+            }else if( sa[0].equals("102") ){
+                Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                System.out.println("CLIENT: closing socket");
+                try {
+                    pointer.socket.close();
+                    Thread.currentThread().join();
+                } catch (IOException ex) {
+                    System.out.println("Error closing socket on a 102");
+                    Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (InterruptedException ex) {
+                    System.out.println("Failed to stop thread on a 102");
+                    Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                }
+                });
+            }else if( sa[0].equals("201") ){
+                
+            }else if( sa[0].equals("202") ){
+                Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        pointer.AddStockLabel_fxid.setText( sa[2] );
+                    }
+                });
+            }else if( sa[0].equals("221") ){
+                System.out.println( ">>" + data );
+                Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        removeListener();
+                        pointer.listView_01_fxid.getItems().clear(); //  clear the list first
+                        for(int ii = 1; ii < sa.length; ii++){
+                            System.out.println(ii + " " + sa[ii]);
+                            pointer.listView_01_fxid.getItems().add(sa[ii]);
+                        }
+                        setListener();
+                        pointer.listView_01_fxid.getSelectionModel().selectFirst();
+                        System.out.println("End CLIENT:221");
+                    }
+                });             
+            }else if( sa[0].equals("222") ){
+                Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        DelResetLabel_fxid.setText("No stocks being tracked");
+                    }
+                });
+            }else if( sa[0].equals("301") ){
+                 Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        
+                        String[] stockData = sa[1].split(",");
+                        ArrayList<String> first24 = new ArrayList<String>();
+                        ArrayList<String> post24 = new ArrayList<String>();
+                        
+                        String firstDate = null,
+                                cutoff = null;
+                        boolean postTwentyFour = false;
+                        
+                        pointer.listView_02_fxid.getItems().clear();    //  clear listviews 2 and 3 (24 & post24)
+                        pointer.listView_03_fxid.getItems().clear();
+                        
+                        pointer.listView_02_fxid.setEditable(false);    //  users shalt not select these lists!
+                        pointer.listView_03_fxid.setEditable(false);
+                        
+                        for(int ii = 0; ii < stockData.length; ii++){
+                            String tmp = stockData[ii].trim();
+                            
+                            if( !tmp.isEmpty() ){
+                                
+                                if( ii == 0 ){
+                                    firstDate = tmp.substring(tmp.indexOf(" "), tmp.length()).trim();
+                                    String[] one = tmp.split(" ");
+                                    int day = Integer.parseInt(one[2]);
+                                    one[2] = "" + ++day;
+                                    
+                                    cutoff = one[1] + " " + one[2] + " " + one[3];
+                                    
+                                //    System.out.println( ">>> " + firstDate );
+                                //    System.out.println( ">>> " + cutoff );
+                                }
+                                if( tmp.contains(cutoff) ) postTwentyFour = true;
+                                
+                                if( postTwentyFour ){
+                                    //  update post-24
+                                    if( tmp.contains(":00:00") ){   // update on the hour XX:00:00
+                                    pointer.listView_03_fxid.getItems().add(tmp);
+                                    }
+                                }else{
+                                    //  update pre-24
+                                    pointer.listView_02_fxid.getItems().add(tmp);                   
+                                }
+                            //    System.out.println(ii + " :" + tmp + ":" );
+                            }
+                        }
+                        DelResetLabel_fxid.setText(""); //  clear potential error message clutter
+                    }
+                });
+            }else if( sa[0].equals("302") ){
+                 Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        DelResetLabel_fxid.setText( sa[1] );
+                        //  clear listviews 2 and 3 (24 & post24)
+                        pointer.listView_02_fxid.getItems().clear();    
+                        pointer.listView_03_fxid.getItems().clear();
+                    }
+                });
+             }else if( sa[0].equals("401") ){
+                 Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        DelResetLabel_fxid.setText( "Reset " + sa[1] + " data" );
+                        //  clear listviews 2 and 3 (24 & post24)
+                        pointer.listView_02_fxid.getItems().clear();    
+                        pointer.listView_03_fxid.getItems().clear();
+                    }
+                });
+             }else if( sa[0].equals("402") ){
+                 Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        DelResetLabel_fxid.setText( "Something went wrong. Report to C-DADS immediately");
+                        //  clear listviews 2 and 3 (24 & post24)
+                        pointer.listView_02_fxid.getItems().clear();    
+                        pointer.listView_03_fxid.getItems().clear();
+                    }
+                });
+             }else if( sa[0].equals("451") ){
+                 Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        DelResetLabel_fxid.setText( "Deleted " + sa[1] + " data" );
+                        pointer.listView_02_fxid.getItems().remove(sa[1]);
+                        //  clear listviews 2 and 3 (24 & post24)
+                        pointer.listView_02_fxid.getItems().clear();    
+                        pointer.listView_03_fxid.getItems().clear();
+                    }
+                });
+             }else if( sa[0].equals("452") ){
+                 Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        DelResetLabel_fxid.setText( "Something went wrong deleting data. Report to C-DADS immediately");
+                        //  clear listviews 2 and 3 (24 & post24)
+                        pointer.listView_02_fxid.getItems().clear();    
+                        pointer.listView_03_fxid.getItems().clear();
+                    }
+                });
+            }else{
+                System.out.println( "CLIENT: unknown op code: " + data );
+            }
+        }
+        
+        
+        public byte[] encrypt(String key, String value)
+			throws GeneralSecurityException {
+
+		byte[] raw = key.getBytes(Charset.forName("US-ASCII"));
+		if (raw.length != 16) {
+			throw new IllegalArgumentException("Invalid key size.");
+		}
+
+		SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.ENCRYPT_MODE, skeySpec,
+				new IvParameterSpec(new byte[16]));
+		return cipher.doFinal(value.getBytes(Charset.forName("US-ASCII")));
+	}
+
+	public String decrypt(String key, byte[] encrypted)
+			throws GeneralSecurityException {
+
+		byte[] raw = key.getBytes(Charset.forName("US-ASCII"));
+		if (raw.length != 16) {
+			throw new IllegalArgumentException("Invalid key size.");
+		}
+		SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
+
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.DECRYPT_MODE, skeySpec,
+				new IvParameterSpec(new byte[16]));
+		byte[] original = cipher.doFinal(encrypted);
+
+		return new String(original, Charset.forName("US-ASCII"));
+	}
+    }
 }

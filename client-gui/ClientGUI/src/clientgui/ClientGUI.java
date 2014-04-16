@@ -16,7 +16,7 @@ import javafx.stage.Stage;
  *
  * @author moriarty
  */
-public class ClientGUI extends Application {
+public class ClientGUI extends Application implements Runnable {
     
     @Override
     public void start(Stage stage) throws Exception {
@@ -38,8 +38,13 @@ public class ClientGUI extends Application {
      *
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
-        launch(args);
+ //   public static void main(String[] args) {
+ //       launch(args);
+ //   }
+
+    @Override
+    public void run() {
+       launch();
     }
     
 }

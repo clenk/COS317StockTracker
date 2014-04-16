@@ -9,22 +9,19 @@
 
 <AnchorPane id="AnchorPane" prefHeight="549.999800000005" prefWidth="780.0000999999975" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="clientgui.FXMLDocumentController">
   <children>
-    <ScrollPane fx:id="SYMB_scrollPane_fxid" content="$null" hbarPolicy="NEVER" layoutX="14.0" layoutY="36.0" prefHeight="389.0" prefWidth="143.0" vbarPolicy="AS_NEEDED" />
-    <ScrollPane fx:id="past24_scrollPane_fxid" content="$null" hbarPolicy="NEVER" layoutX="204.0" layoutY="36.0" prefHeight="389.0" prefWidth="143.0" vbarPolicy="AS_NEEDED" />
-    <ScrollPane fx:id="post24_scrollPane_fxid" content="$null" hbarPolicy="NEVER" layoutX="384.0" layoutY="36.0" prefHeight="389.0" prefWidth="143.0" vbarPolicy="AS_NEEDED" />
     <Label layoutX="47.0" layoutY="17.0" text="Stock Symbols" />
-    <Label layoutX="247.0" layoutY="17.0" text="Past 24 hrs" />
-    <Label layoutX="426.0" layoutY="17.0" text="Post 24 hrs" />
-    <Button fx:id="del_stock_btn" layoutX="14.0" layoutY="435.0" mnemonicParsing="false" onAction="#deleteBtn_action" text="Delete Selected Stock" />
-    <Button fx:id="reset_stock_btn" layoutX="14.0" layoutY="463.0" mnemonicParsing="false" onAction="#resetBtn_action" text="Reset Selected Stock Data" />
-    <Button fx:id="connect_btn" layoutX="591.0" layoutY="298.0" mnemonicParsing="false" onAction="#connectBtn_action" text="Connect" />
-    <Button fx:id="disconnect_btn" layoutX="591.0" layoutY="327.0" mnemonicParsing="false" onAction="#disconnectBtn_action" text="Disconnect" />
-    <Label layoutX="591.0" layoutY="275.0" text="Connection Info" />
+    <Label layoutX="247.0" layoutY="17.0" text="Past 24 hrs (EDT)" />
+    <Label layoutX="426.0" layoutY="17.0" text="Post 24 hrs (EDT)" />
+    <Button fx:id="del_stock_btn" layoutX="14.0" layoutY="463.0" mnemonicParsing="false" onAction="#deleteBtn_action" text="Delete Selected Stock" />
+    <Button fx:id="reset_stock_btn" layoutX="14.0" layoutY="491.0" mnemonicParsing="false" onAction="#resetBtn_action" text="Reset Selected Stock Data" />
+    <Button fx:id="connect_btn" layoutX="563.0" layoutY="347.0" mnemonicParsing="false" onAction="#connectBtn_action" text="Connect" />
+    <Button fx:id="disconnect_btn" layoutX="563.0" layoutY="376.0" mnemonicParsing="false" onAction="#disconnectBtn_action" text="Disconnect" />
+    <Label layoutX="563.0" layoutY="324.0" text="Connection Info" />
     <TextField fx:id="AddStockTF_fxid" layoutX="634.0" layoutY="38.0" prefWidth="100.0" />
     <Button fx:id="AddStockBtn_fxid" layoutX="659.0" layoutY="98.0" mnemonicParsing="false" onAction="#AddStockBtn_action" text="Add Stock" />
     <Label layoutX="655.0" layoutY="19.0" text="Add Stock" />
-    <Label fx:id="AddStockLabel_fxid" layoutX="634.0" layoutY="139.0" text="AddStock Err Label" />
-    <ComboBox fx:id="AddStockCB_fxid" layoutX="551.0" layoutY="67.0" onAction="#test_action" prefHeight="21.0" prefWidth="183.0">
+    <Label fx:id="AddStockLabel_fxid" layoutX="584.0" layoutY="128.0" text="AddStock Err Label" />
+    <ComboBox fx:id="AddStockCB_fxid" layoutX="551.0" layoutY="67.0" prefHeight="21.0" prefWidth="183.0">
       <items>
         <FXCollections fx:factory="observableArrayList">
           <String fx:value="Item 1" />
@@ -33,7 +30,17 @@
         </FXCollections>
       </items>
     </ComboBox>
-    <Label fx:id="DelResetLabel_fxid" layoutX="14.0" layoutY="493.0" text="Delete/Reset label" />
-    <Label fx:id="connectLabel_fxid" layoutX="591.0" layoutY="360.0" text="Label" />
+    <Label fx:id="DelResetLabel_fxid" layoutX="14.0" layoutY="521.0" text="Delete/Reset label" />
+    <Label fx:id="connectLabel_fxid" layoutX="563.0" layoutY="409.0" text="Label" />
+    <TextField fx:id="username_fxid" layoutX="542.0" layoutY="231.0" prefWidth="200.0" text="hgruber" />
+    <Label layoutX="542.0" layoutY="214.0" text="Username" />
+    <Label layoutX="542.0" layoutY="256.0" text="Password" />
+    <PasswordField fx:id="password_fxid" layoutX="542.0" layoutY="272.0" prefWidth="200.0" />
+    <TextField fx:id="netAddr_fxid" layoutX="542.0" layoutY="192.0" prefWidth="200.0" text="localhost" />
+    <Label layoutX="542.0" layoutY="176.0" text="Network Address(no port)" />
+    <Button fx:id="refresh_btn_fxid" layoutX="14.0" layoutY="433.0" mnemonicParsing="false" onAction="#refreshBtn_action" text="Refresh Stocks" />
+    <ListView id="ListView_01_fxid" fx:id="listView_01_fxid" layoutX="29.0" layoutY="33.0" prefHeight="385.0" prefWidth="129.0" />
+    <ListView fx:id="listView_02_fxid" editable="false" layoutX="197.0" layoutY="33.0" prefHeight="386.0" prefWidth="158.00009999999747" />
+    <ListView fx:id="listView_03_fxid" layoutX="368.0" layoutY="33.0" prefHeight="385.0" prefWidth="157.99990000000253" />
   </children>
 </AnchorPane>

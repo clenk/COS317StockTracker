@@ -1,4 +1,4 @@
-package classProject;
+package ssl;
 
 /*************************************************************************
  *  Compilation:  javac In.java
