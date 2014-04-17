@@ -104,7 +104,14 @@ public class FXMLDocumentController implements Initializable {
     public Label DelResetLabel_fxid;
     
     //  User/Pass stuff
-   
+   @FXML
+   public Button resetPw_fxid;
+   @FXML
+   public PasswordField curPassword_fxid;
+   public PasswordField newPassword_fxid;
+   public PasswordField newPassword2_fxid;
+   @FXML
+   public Label resetPwLabel_fxid;
     
     @FXML 
     protected void AddStockBtn_action(ActionEvent event) throws GeneralSecurityException {   
@@ -246,12 +253,58 @@ public class FXMLDocumentController implements Initializable {
                 Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
             } catch (GeneralSecurityException ex) {
                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
-           }
+            }
         }else{
             DelResetLabel_fxid.setText("Please connect");
         }
     }
-    
+    @FXML
+    protected void resetPwBtn_action(ActionEvent event) {
+        if( socket != null && socket.isConnected() ){
+            try {
+                
+                String curPassword = curPassword_fxid.getText();
+                String newPassword1 = newPassword_fxid.getText();
+                String newPassword2 = newPassword2_fxid.getText().replaceAll(",", "");
+                if(curPassword.contains(",") || newPassword1.contains(",") || newPassword2.contains(",")){
+                    resetPwLabel_fxid.setText("No commas in the passwords, please");
+                    return;
+                }
+                
+                newPassword1 = newPassword1.replaceAll(",", "");
+                newPassword2 = newPassword2.replaceAll(",", "");
+                
+                if( curPassword.isEmpty() || newPassword1.isEmpty() || newPassword2.isEmpty() ){
+                    resetPwLabel_fxid.setText("Fill out all fields");
+                    return;
+                }
+                
+                if( !newPassword1.equals(newPassword2) ) {
+                    resetPwLabel_fxid.setText("New Passwords don't match!");
+                    return;
+                }
+                
+                
+                System.out.println("Resetting password");
+                
+                String reset = "600,, " + curPassword + ",, " + newPassword1 + ",, " + newPassword2;   
+                byte[] resetCrypt = encrypt(key, reset);
+                dos.writeInt(resetCrypt.length);
+                dos.write(resetCrypt);
+
+            
+            
+                resetPwLabel_fxid.setText("Successfullly reset password");
+            } catch (IOException ex) {
+                resetPwLabel_fxid.setText("Password reset exception.");
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (GeneralSecurityException ex) {
+               Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }else{
+            resetPwLabel_fxid.setText("Please connect");
+        }
+    }
     @FXML 
     protected void resetBtn_action(ActionEvent event) {
         if( socket != null && socket.isConnected() ){
