@@ -20,7 +20,7 @@
     <TextField fx:id="AddStockTF_fxid" layoutX="634.0" layoutY="38.0" prefWidth="100.0" />
     <Button fx:id="AddStockBtn_fxid" layoutX="659.0" layoutY="98.0" mnemonicParsing="false" onAction="#AddStockBtn_action" text="Add Stock" />
     <Label layoutX="655.0" layoutY="19.0" text="Add Stock" />
-    <Label fx:id="AddStockLabel_fxid" layoutX="584.0" layoutY="128.0" text="AddStock Err Label" />
+    <Label fx:id="AddStockLabel_fxid" layoutX="584.0" layoutY="128.0" /> <!--AA removed text="AddStock Err Label"-->
     <ComboBox fx:id="AddStockCB_fxid" layoutX="551.0" layoutY="67.0" prefHeight="21.0" prefWidth="183.0">
       <items>
         <FXCollections fx:factory="observableArrayList">
@@ -36,7 +36,7 @@
     <Label layoutX="542.0" layoutY="214.0" text="Username" />
     <Label layoutX="542.0" layoutY="256.0" text="Password" />
     <PasswordField fx:id="password_fxid" layoutX="542.0" layoutY="272.0" prefWidth="200.0" />
-    <TextField fx:id="netAddr_fxid" layoutX="542.0" layoutY="192.0" prefWidth="200.0" text="localhost" />
+    <TextField fx:id="netAddr_fxid" layoutX="542.0" layoutY="192.0" prefWidth="200.0" /> <!--AA removed text="localhost"-->
     <Label layoutX="542.0" layoutY="176.0" text="Network Address(no port)" />
     <Button fx:id="refresh_btn_fxid" layoutX="14.0" layoutY="433.0" mnemonicParsing="false" onAction="#refreshBtn_action" text="Refresh Stocks" />
     <ListView id="ListView_01_fxid" fx:id="listView_01_fxid" layoutX="29.0" layoutY="33.0" prefHeight="385.0" prefWidth="129.0" />

@@ -51,6 +51,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class FXMLDocumentController implements Initializable {
     
     private final String key = "SemperVigilisEst";
+    public final int port = 8010;
     
     public Socket socket;
     public DataInputStream dis;
@@ -60,7 +61,7 @@ public class FXMLDocumentController implements Initializable {
         ".VI", ".AX", ".BR", ".SA", ".TO", ".V", ".SN", ".SS", ".SZ", ".CO", ".NX", ".PA",
         ".BE", ".BM", ".DU", ".F", ".HM", ".HA", ".MU", ".SG", ".DE", ".HK", ".BO", ".NS",
         ".JK", ".TA", ".MI", ".MX", ".AS", ".NZ", ".OL", ".LS", ".SI", ".KS", ".KQ", ".BC",
-        ".BI", ".MF", ".MC", ".MA", ".ST", ".SW", ".TWO", "TW", ".L"
+        ".BI", ".MF", ".MC", ".MA", ".ST", ".SW", ".TWO", ".TW", ".L"
     };
 
     //  list views
@@ -109,7 +110,7 @@ public class FXMLDocumentController implements Initializable {
     protected void AddStockBtn_action(ActionEvent event) throws GeneralSecurityException {   
         if( socket != null && socket.isConnected() ){
             
-            String data = AddStockTF_fxid.getText();
+            String data = AddStockTF_fxid.getText().toUpperCase();
             data = data.replaceAll(",", "");
             data = data.replaceAll(" ", "");
             
@@ -150,7 +151,8 @@ public class FXMLDocumentController implements Initializable {
                     connectLabel_fxid.setText("Fill out all fields");
                     return;
                 }
-                socket = new Socket( addr, 717);
+                System.out.println("Connecting to IP address: "+addr+" port "+port);
+                socket = new Socket( addr, port);
                 dos = new DataOutputStream(socket.getOutputStream() );
                 dis = new DataInputStream(socket.getInputStream() );
                 
@@ -199,13 +201,22 @@ public class FXMLDocumentController implements Initializable {
     
     @FXML 
     protected void refreshBtn_action(ActionEvent event) {   
+        refreshStocks();
+    }
+    
+    private void refreshStocks(){
         if( socket != null && socket.isConnected() ){
             String msg = "220";
             try {
                 byte[] msgCrypt = encrypt(key, msg);
                 dos.writeInt(msgCrypt.length);
                 dos.write(msgCrypt);
-                DelResetLabel_fxid.setText("Refresh stocks.");
+                //DelResetLabel_fxid.setText("Refresh stocks.");
+                Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        DelResetLabel_fxid.setText("Refresh stocks.");
+                    }
+                });
             } catch (IOException ex) {
                 DelResetLabel_fxid.setText("Error sending 220.");
                 Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
@@ -229,6 +240,7 @@ public class FXMLDocumentController implements Initializable {
                 dos.write(msgCrypt);
                 
                 DelResetLabel_fxid.setText("Delete Stock ");
+                refreshStocks();
             } catch (IOException ex) {
                 DelResetLabel_fxid.setText("Delete Stock exception.");
                 Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
@@ -252,6 +264,7 @@ public class FXMLDocumentController implements Initializable {
                 dos.write(msgCrypt);
                 
                 DelResetLabel_fxid.setText("Reset Stock ");
+                refreshStocks();
             } catch (IOException ex) {
                 DelResetLabel_fxid.setText("Reset Stock exception.");
                 Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
@@ -480,6 +493,7 @@ public class FXMLDocumentController implements Initializable {
                 Platform.runLater(new Runnable() {
                     @Override public void run() {
                         pointer.connectLabel_fxid.setText("Connected-Authorized");
+                        refreshStocks();
                    }
                });
                 
@@ -500,7 +514,13 @@ public class FXMLDocumentController implements Initializable {
                 }
                 });
             }else if( sa[0].equals("201") ){
-                
+                //System.out.println(sa[0]+", "+sa[1]+", "+sa[2]);
+                Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        pointer.AddStockLabel_fxid.setText( sa[2] );
+                    }
+                });
+                refreshStocks();
             }else if( sa[0].equals("202") ){
                 Platform.runLater(new Runnable() {
                     @Override public void run() {

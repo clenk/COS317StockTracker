@@ -35,6 +35,7 @@ public class Server implements Runnable{
 
 	private ServerSocket serverSocket;
 	private ServerSocketFactory factory;
+	public final int port = 8010;
 	public StockReader reader;
 
 	public final String username = "hgruber";
@@ -59,8 +60,8 @@ public class Server implements Runnable{
 
 		try {
 			factory = ServerSocketFactory.getDefault();
-			serverSocket = (ServerSocket) factory.createServerSocket(717);
-
+			//serverSocket = (ServerSocket) factory.createServerSocket(717);
+			serverSocket = new ServerSocket(port);
 
 			while(true){
 				Socket welcome = serverSocket.accept();
@@ -202,7 +203,7 @@ class MessageParser implements Runnable {
 			int ret = server.reader.addStockSymbol(sa[1]);
 
 			if( ret == -2 ){
-				sendMsg( "202, FALSE,, Stock " + sa[1] + " does not exist");
+				sendMsg( "202,, FALSE,, Stock " + sa[1] + " does not exist");
 				System.out.println("SERVER: sending 202-0");
 			}
 			else if( ret == -1 ){
