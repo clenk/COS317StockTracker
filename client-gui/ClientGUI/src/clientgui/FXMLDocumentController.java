@@ -323,8 +323,6 @@ public class FXMLDocumentController implements Initializable {
                 dos.writeInt(resetCrypt.length);
                 dos.write(resetCrypt);
 
-            
-            
                 resetPwLabel_fxid.setText("Successfullly reset password");
             } catch (IOException ex) {
                 resetPwLabel_fxid.setText("Password reset exception.");
@@ -713,7 +711,7 @@ public class FXMLDocumentController implements Initializable {
              }else if( sa[0].equals("451") ){
                  Platform.runLater(new Runnable() {
                     @Override public void run() {
-                        DelResetLabel_fxid.setText( "Deleted " + sa[1] + " data" );
+                        DelResetLabel_fxid.setText( sa[1] );
                         pointer.listView_02_fxid.getItems().remove(sa[1]);
                         //  clear listviews 2 and 3 (24 & post24)
                         pointer.listView_02_fxid.getItems().clear();    
@@ -723,7 +721,7 @@ public class FXMLDocumentController implements Initializable {
              }else if( sa[0].equals("452") ){
                  Platform.runLater(new Runnable() {
                     @Override public void run() {
-                        DelResetLabel_fxid.setText( "Something went wrong deleting data. Report to C-DADS immediately");
+                        DelResetLabel_fxid.setText( sa[1] );
                         //  clear listviews 2 and 3 (24 & post24)
                         pointer.listView_02_fxid.getItems().clear();    
                         pointer.listView_03_fxid.getItems().clear();
