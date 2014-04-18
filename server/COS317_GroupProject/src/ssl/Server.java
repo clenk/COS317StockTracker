@@ -203,7 +203,7 @@ class MessageParser implements Runnable {
 				System.out.println("SERVER: sending 202-0");
 			}
 			else if( ret == -1 ){
-				sendMsg( "202,, FALSE, Failed to add" );
+				sendMsg( "202,, FALSE,, Failed to add" );
 				System.out.println("SERVER: sending 202-1");
 			}
 			else if( ret == 0 ){
