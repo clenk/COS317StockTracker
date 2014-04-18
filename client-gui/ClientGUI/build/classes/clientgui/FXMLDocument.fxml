@@ -52,6 +52,6 @@
     <PasswordField id="password_fxid" fx:id="newPassword2_fxid" layoutX="545.0" layoutY="500.0" prefWidth="200.0" />
     <Text layoutX="418.0" layoutY="514.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Retype New Password" />
     <Button id="connect_btn" fx:id="resetPw_fxid" layoutX="650.0" layoutY="414.0" mnemonicParsing="false" onAction="#resetPwBtn_action" text="Reset Password" />
-    <Label id="DelResetLabel_fxid" layoutX="544.0" layoutY="524.0" text="Reset Password label" />
+    <Label id="DelResetLabel_fxid" fx:id="resetPwLabel_fxid" layoutX="544.0" layoutY="524.0" text="Reset Password label" />
   </children>
 </AnchorPane>

@@ -19,6 +19,7 @@ import java.net.Socket;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -167,7 +168,13 @@ public class FXMLDocumentController implements Initializable {
                 Thread t20 = new Thread(listener);
                 t20.start();
                 
-                String hello = "100,, " + user + ",, " + pass;   
+ 
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                digest.update(pass.getBytes("UTF-8"));
+                byte[] hash = digest.digest();
+                String hexHash = bytesToHex(hash);
+                
+                String hello = "100,, " + user + ",, " + hexHash;   
                 byte[] helloCrypt = encrypt(key, hello);
                 dos.writeInt(helloCrypt.length);
                 dos.write(helloCrypt);
@@ -182,6 +189,18 @@ public class FXMLDocumentController implements Initializable {
                 Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    //  helper method for the above connect() method
+    final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+	public static String bytesToHex(byte[] bytes) {
+	    char[] hexChars = new char[bytes.length * 2];
+	    for ( int j = 0; j < bytes.length; j++ ) {
+	        int v = bytes[j] & 0xFF;
+	        hexChars[j * 2] = hexArray[v >>> 4];
+	        hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+	    }
+	    return new String(hexChars);
+	}
     
     @FXML 
     protected void disconnectBtn_action(ActionEvent event) {
@@ -265,14 +284,12 @@ public class FXMLDocumentController implements Initializable {
                 
                 String curPassword = curPassword_fxid.getText();
                 String newPassword1 = newPassword_fxid.getText();
-                String newPassword2 = newPassword2_fxid.getText().replaceAll(",", "");
+                String newPassword2 = newPassword2_fxid.getText();
                 if(curPassword.contains(",") || newPassword1.contains(",") || newPassword2.contains(",")){
                     resetPwLabel_fxid.setText("No commas in the passwords, please");
                     return;
                 }
-                
-                newPassword1 = newPassword1.replaceAll(",", "");
-                newPassword2 = newPassword2.replaceAll(",", "");
+
                 
                 if( curPassword.isEmpty() || newPassword1.isEmpty() || newPassword2.isEmpty() ){
                     resetPwLabel_fxid.setText("Fill out all fields");
@@ -285,9 +302,23 @@ public class FXMLDocumentController implements Initializable {
                 }
                 
                 
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                
+                digest.update(curPassword.getBytes("UTF-8"));
+                byte[] hash0 = digest.digest();
+                String hexHashCurPW = bytesToHex(hash0);
+                
+                digest.update(newPassword1.getBytes("UTF-8"));
+                byte[] hash = digest.digest();
+                String hexHashPW1 = bytesToHex(hash);
+                
+                digest.update(newPassword2.getBytes("UTF-8"));
+                byte[] hash2 = digest.digest();
+                String hexHashPW2 = bytesToHex(hash2);
+                
                 System.out.println("Resetting password");
                 
-                String reset = "600,, " + curPassword + ",, " + newPassword1 + ",, " + newPassword2;   
+                String reset = "600,, " + hexHashCurPW + ",, " + hexHashPW1 + ",, " + hexHashPW2;   
                 byte[] resetCrypt = encrypt(key, reset);
                 dos.writeInt(resetCrypt.length);
                 dos.write(resetCrypt);
