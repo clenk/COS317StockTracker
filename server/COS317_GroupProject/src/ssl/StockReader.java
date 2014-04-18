@@ -65,7 +65,6 @@ public class StockReader implements Runnable{
 					br.write(yougotme + "\n"); 
 					password = yougotme;
 					
-					
 					fw.flush();
 					br.flush();
 					fw.close();
@@ -97,7 +96,7 @@ public class StockReader implements Runnable{
 				} catch (IOException e) {
 					System.out.println("Failure to create file: symbols.txt ");
 					e.printStackTrace();
-				}		
+				}
 			}else{
 				System.out.println("symbols.txt exists.");
 				//	if the symbols file does exist, then check to see that all the appropriate files exist as well

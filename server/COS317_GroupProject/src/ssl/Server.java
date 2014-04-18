@@ -1,11 +1,14 @@
 package ssl;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -17,6 +20,8 @@ import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -39,7 +44,6 @@ public class Server implements Runnable{
 	public StockReader reader;
 
 	public final String username = "hgruber";
-	//public String password /*= "FoxtrotMikeLima"*/;
 
 
 	public Server(){
@@ -49,8 +53,6 @@ public class Server implements Runnable{
 		Thread t1 = new Thread( reader );
 		t1.start();
 	}
-
-
 
 	/**
 	 * This method creates a socket and listens
@@ -303,6 +305,24 @@ class MessageParser implements Runnable {
 			boolean tf = false;
 			if( sa[1].equals(server.reader.getPassword()) && sa[2].equals(sa[3]) ){
 				tf = true;
+
+				try {
+					File dir = new File("");
+					String path = dir.getAbsolutePath() + "\\";
+					dir = new File(path);
+					File f = new File( dir.getAbsolutePath() + "\\HASHPASS.txt");
+					FileWriter fw;
+					fw = new FileWriter( f.getAbsolutePath() );
+					BufferedWriter br = new BufferedWriter( fw );
+					br.write(sa[2] + "\n"); 
+					
+					fw.flush();
+					br.flush();
+					fw.close();
+					br.close();	
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 			String response = "";
 			if( tf ){
