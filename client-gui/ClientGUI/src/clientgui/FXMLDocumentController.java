@@ -179,7 +179,7 @@ public class FXMLDocumentController implements Initializable {
                 dos.writeInt(helloCrypt.length);
                 dos.write(helloCrypt);
 
-                if( socket.isConnected()) connectLabel_fxid.setText("Connected.");
+                //if( socket.isConnected()) connectLabel_fxid.setText("Connected.");
                 
             } catch (IOException ex) {
                 System.out.println("Failed to connect to localhost");
@@ -204,7 +204,7 @@ public class FXMLDocumentController implements Initializable {
     
     @FXML 
     protected void disconnectBtn_action(ActionEvent event) {
-        if( socket != null && socket.isConnected() ){
+        if( socket != null || socket.isConnected() ){
             try {
                 String goodbye = "500";
                 
@@ -219,7 +219,8 @@ public class FXMLDocumentController implements Initializable {
 //                listView_03_fxid.getItems().clear();
                 
             } catch (IOException ex) {
-                connectLabel_fxid.setText("Error disconnecting");
+                System.out.println("Didn't disconnect,(since wasn't connected before)");
+                connectLabel_fxid.setText("Disconnected");
               Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
             } catch (GeneralSecurityException ex) {
                 Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
@@ -573,8 +574,14 @@ public class FXMLDocumentController implements Initializable {
         private void parseData( String data ){
             final String[] sa = data.split(",, ");
             
-            
-            if( sa[0].equals("101") ){
+            if( sa[0].equals("-1") ){
+                System.out.println("Disconnect");
+                Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        pointer.connectLabel_fxid.setText("Disconnected");
+                   }
+               });
+            }else if( sa[0].equals("101") ){
                 System.out.println("CLIENT: authorized");
                 Platform.runLater(new Runnable() {
                     @Override public void run() {
@@ -586,17 +593,18 @@ public class FXMLDocumentController implements Initializable {
             }else if( sa[0].equals("102") ){
                 Platform.runLater(new Runnable() {
                     @Override public void run() {
-                System.out.println("CLIENT: closing socket");
-                try {
-                    pointer.socket.close();
-                    Thread.currentThread().join();
-                } catch (IOException ex) {
-                    System.out.println("Error closing socket on a 102");
-                    Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (InterruptedException ex) {
-                    System.out.println("Failed to stop thread on a 102");
-                    Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                    System.out.println("CLIENT: closing socket");
+                    pointer.connectLabel_fxid.setText(sa[2]);
+                    try {
+                        pointer.socket.close();
+                        Thread.currentThread().join();
+                    } catch (IOException ex) {
+                        System.out.println("Error closing socket on a 102");
+                        Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (InterruptedException ex) {
+                        System.out.println("Failed to stop thread on a 102");
+                        Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
                 });
             }else if( sa[0].equals("201") ){

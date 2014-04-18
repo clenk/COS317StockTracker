@@ -181,7 +181,7 @@ class MessageParser implements Runnable {
 
 			}else{
 				System.out.println("SERVER: NOAUTH");
-				String response = "102,, NOAUTH, Credentials not valid";
+				String response = "102,, NOAUTH,, Credentials not valid";
 				try {
 					sendMsg(response);
 					socket.close();
@@ -199,7 +199,7 @@ class MessageParser implements Runnable {
 			int ret = server.reader.addStockSymbol(sa[1]);
 
 			if( ret == -2 ){
-				sendMsg( "202, FALSE,, Stock " + sa[1] + " does not exist");
+				sendMsg( "202,, FALSE,, Stock " + sa[1] + " does not exist");
 				System.out.println("SERVER: sending 202-0");
 			}
 			else if( ret == -1 ){
