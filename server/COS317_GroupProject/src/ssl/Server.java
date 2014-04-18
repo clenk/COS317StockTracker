@@ -60,7 +60,6 @@ public class Server implements Runnable{
 			factory = ServerSocketFactory.getDefault();
 			serverSocket = (ServerSocket) factory.createServerSocket(port);
 
-
 			while(true){
 				Socket welcome = serverSocket.accept();
 				welcome.setSoLinger(true, 180000);
@@ -137,11 +136,8 @@ class MessageParser implements Runnable {
 					System.out.println("Problem closing thread after severed connection.");
 					e.printStackTrace();
 				}
-
-
 			}
 		}
-
 	}
 
 	private void sendMsg( String data ){
@@ -166,7 +162,6 @@ class MessageParser implements Runnable {
 	private void parseMsgData(String clientSentance) {
 
 		String[] sa = clientSentance.split(",, ");
-
 
 		if( sa[0].equals("100") ){
 			System.out.println("Parsing login auth for " + sa[1] + ":" + sa[2] );

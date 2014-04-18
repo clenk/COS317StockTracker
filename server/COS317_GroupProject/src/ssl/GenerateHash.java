@@ -22,80 +22,31 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class GenerateHash {
 	
-	/*
-	 String input = "FoxtrotMikeLima";
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			digest.update(input.getBytes("UTF-8"));
-			byte[] hash = digest.digest();
-			
-			String hex = bytesToHex(hash);
-			
-			System.out.println( "hex of hash: " + hex );
-			
-			File f = new File("HASHPASS.txt");
-			
-			DataOutputStream dos = new DataOutputStream(new FileOutputStream( f ));
-			
-			System.out.println("hash len: " + hash.length );
-		//	dos.writeInt( hash.length );
-			dos.writeBytes(hex);
-			dos.flush();
-			dos.close();
-			
-			
-			File f2 = new File("HASHPASS.txt");
-			Scanner sc = new Scanner( f2 );
-			String nuHex = sc.nextLine();
-			System.out.println( "read pw hash: " + nuHex );
-			System.out.println( nuHex.equals(hex) );
-	 */
-	
 	public static void main(String[] args){
 		try {
 			String key = "abcdefgh12345678";
-			String input = "123.0 Hello World";
+			String newPassword = "123.0 Hello World";
 			
-			byte[] cipherText = encrypt(key, input);
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			digest.update(newPassword.getBytes("UTF-8"));
+			byte[] cipherBytes = digest.digest();
 			
+			String cipherStr = bytesToHex(cipherBytes);
 			
-			String cipherStr = bytesToHex(cipherText);
-			
-			System.out.println( input );
+			System.out.println( cipherStr );
 			System.out.println( "hex(1): " + cipherStr );
 			
-	/*		File f = new File("HASHPASS.txt");
+			File f = new File("HASHPASS.txt");
 			DataOutputStream dos = new DataOutputStream(new FileOutputStream( f ));
 			dos.writeBytes(cipherStr);
 			dos.flush();
 			dos.close();
-			
-			
-			File f2 = new File("HASHPASS.txt");
-			Scanner sc = new Scanner( f2 );	*/
-	//		String nuHex = sc.nextLine();	
-	//		byte[] moarCipherText = hexStringToByteArray(nuHex);
-			byte[] moarCipherText = hexStringToByteArray(cipherStr);
-			
-	//		System.out.println( "hex(2): " + nuHex );
-			
-			String plainText = decrypt(key, moarCipherText);
-			
-			
-			
-			System.out.println( plainText );
-			
-			
-			
-			
+
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		
-	//	} catch (IOException e) {
-			// TODO Auto-generated catch block
-	//		e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		} catch (GeneralSecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
