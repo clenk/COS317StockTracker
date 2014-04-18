@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -24,6 +25,7 @@ public class StockReader implements Runnable{
 
 	private File[] fileList;
 	private final String key = "XvDIim9yVWPCc3Nj";
+	private String password;
 
 	private boolean symbolsExist = false,
 				hashpass = false;
@@ -56,9 +58,13 @@ public class StockReader implements Runnable{
 					FileWriter fw = new FileWriter( f.getAbsolutePath() );
 					BufferedWriter br = new BufferedWriter( fw );
 					String whome = "FoxtrotMikeLima";
-					byte[] nonotme = encrypt(key, whome);
+					MessageDigest digest = MessageDigest.getInstance("SHA-256");
+					digest.update(whome.getBytes("UTF-8"));
+					byte[] nonotme = digest.digest();
 					String yougotme = bytesToHex(nonotme);
 					br.write(yougotme + "\n"); 
+					password = yougotme;
+					
 					
 					fw.flush();
 					br.flush();
@@ -66,13 +72,16 @@ public class StockReader implements Runnable{
 					br.close();	
 					symbolsExist = true;
 				} catch (IOException e) {
-					System.out.println("Failure to create file: symbols.txt ");
+					System.out.println("Failure to create file: HASHPASS.txt ");
 					e.printStackTrace();
 				} catch (GeneralSecurityException e) {
 					e.printStackTrace();
 				}		
 			}else{
 				System.out.println("HASHPASS.txt exists.");
+				// Read in the hashed password
+				password = readInPassword();
+				System.out.println("PASSWORD: " + password);
 			}
 
 			if( !symbolsExist ){			
@@ -267,6 +276,25 @@ public class StockReader implements Runnable{
 			return null;
 			//	e.printStackTrace();
 		}
+	}
+	
+	public String readInPassword() {
+		try {
+			String data = "";
+			Scanner sc = new Scanner(new File( "HASHPASS.txt" ) );
+			if( sc.hasNextLine() ){ // only need the first line
+				data = sc.nextLine();
+			}
+			sc.close();
+			return data;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return null;
+		} 
+	}
+	
+	public String getPassword() {
+		return this.password;
 	}
 	
 	public boolean resetStockData( String symb ){

@@ -39,7 +39,7 @@ public class Server implements Runnable{
 	public StockReader reader;
 
 	public final String username = "hgruber";
-	public String password = "FoxtrotMikeLima";
+	//public String password /*= "FoxtrotMikeLima"*/;
 
 
 	public Server(){
@@ -53,12 +53,13 @@ public class Server implements Runnable{
 
 
 	/**
-	 * This method creats a socket and listens
+	 * This method creates a socket and listens
 	 */
 	public void run() {
 		try {
 			factory = ServerSocketFactory.getDefault();
 			serverSocket = (ServerSocket) factory.createServerSocket(port);
+
 
 			while(true){
 				Socket welcome = serverSocket.accept();
@@ -136,8 +137,11 @@ class MessageParser implements Runnable {
 					System.out.println("Problem closing thread after severed connection.");
 					e.printStackTrace();
 				}
+
+
 			}
 		}
+
 	}
 
 	private void sendMsg( String data ){
@@ -163,11 +167,12 @@ class MessageParser implements Runnable {
 
 		String[] sa = clientSentance.split(",, ");
 
+
 		if( sa[0].equals("100") ){
 			System.out.println("Parsing login auth for " + sa[1] + ":" + sa[2] );
 
 			if( sa[1].equals(server.username) && 
-					sa[2].equals(server.password) ){
+					sa[2].equals(server.reader.getPassword()) ){
 				System.out.println("SERVER: AUTH USER");
 				String response = "101,, AUTH";
 				sendMsg(response);
@@ -273,9 +278,9 @@ class MessageParser implements Runnable {
 
 			String response = null;
 			if( tf ){
-				response = "451,, " + sa[1];
+				response = "451,, " + sa[1] + " successfully deleted";
 			}else{
-				response = "452,, " + sa[1];
+				response = "452,, " + sa[1] + " was unable to be deleted";
 			}
 
 			sendMsg(response);
@@ -292,6 +297,21 @@ class MessageParser implements Runnable {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+		}else if( sa[0].equals("600") ){
+			System.out.println("SERVER: 600");
+			
+			boolean tf = false;
+			if( sa[1].equals(server.reader.getPassword()) && sa[2].equals(sa[3]) ){
+				tf = true;
+			}
+			String response = "";
+			if( tf ){
+				response = "601";
+			}else{
+				response = "602";
+			}
+			
+			sendMsg(response);
 		}else{
 			System.out.println("SERVER: unknown msg type: " + clientSentance);
 		}
