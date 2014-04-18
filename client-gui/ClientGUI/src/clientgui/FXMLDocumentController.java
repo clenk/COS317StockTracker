@@ -205,7 +205,7 @@ public class FXMLDocumentController implements Initializable {
     @FXML 
     protected void disconnectBtn_action(ActionEvent event) {
         if( socket != null && socket.isConnected() ){
-          try {
+            try {
                 String goodbye = "500";
                 
                 byte[] msgCrypt = encrypt(key, goodbye);
@@ -213,7 +213,11 @@ public class FXMLDocumentController implements Initializable {
                 dos.write(msgCrypt);
                  
                 socket.close();
-               connectLabel_fxid.setText("Disconnected.");
+                connectLabel_fxid.setText("Disconnected.");
+//                listView_01_fxid.getItems().clear();
+//                listView_02_fxid.getItems().clear();
+//                listView_03_fxid.getItems().clear();
+                
             } catch (IOException ex) {
                 connectLabel_fxid.setText("Error disconnecting");
               Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
@@ -731,6 +735,9 @@ public class FXMLDocumentController implements Initializable {
                  Platform.runLater(new Runnable() {
                     @Override public void run() {
                         resetPwLabel_fxid.setText( "Password Reset Successful" );
+                        curPassword_fxid.clear();
+                        newPassword_fxid.clear();
+                        newPassword2_fxid.clear();
                     }
                 });
                  
