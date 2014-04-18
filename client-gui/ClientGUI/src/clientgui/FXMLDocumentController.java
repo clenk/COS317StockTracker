@@ -726,7 +726,20 @@ public class FXMLDocumentController implements Initializable {
                         pointer.listView_02_fxid.getItems().clear();    
                         pointer.listView_03_fxid.getItems().clear();
                     }
+                }); 
+             }else if( sa[0].equals("601") ){
+                 Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        resetPwLabel_fxid.setText( "Password Reset Successful" );
+                    }
                 });
+                 
+             }else if( sa[0].equals("602") ){
+                 Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        resetPwLabel_fxid.setText( "Password Reset Unsuccessful" );
+                    }
+                });     
             }else{
                 System.out.println( "CLIENT: unknown op code: " + data );
             }
