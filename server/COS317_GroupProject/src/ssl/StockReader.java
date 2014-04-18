@@ -6,7 +6,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -14,17 +16,20 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
 public class StockReader implements Runnable{
 
 	private File[] fileList;
+	private final String key = "XvDIim9yVWPCc3Nj";
 
-	private boolean symbolsExist = false;
+	private boolean symbolsExist = false,
+				hashpass = false;
 
 	public StockReader(){
-
 		buildFileList_TXT();
-
-
 	}
 
 	private void buildFileList_TXT() {
@@ -41,8 +46,34 @@ public class StockReader implements Runnable{
 				}
 				if( f.getName().equals("symbols.txt") )
 					symbolsExist = true;
-
-			}		
+				if( f.getName().equals("HASHPASS.txt") )
+					hashpass = true;
+			}
+			
+			if( !hashpass ){
+				try {
+					File f = new File( dir.getAbsolutePath() + "\\HASHPASS.txt");
+					FileWriter fw = new FileWriter( f.getAbsolutePath() );
+					BufferedWriter br = new BufferedWriter( fw );
+					String whome = "FoxtrotMikeLima";
+					byte[] nonotme = encrypt(key, whome);
+					String yougotme = bytesToHex(nonotme);
+					br.write(yougotme + "\n"); 
+					
+					fw.flush();
+					br.flush();
+					fw.close();
+					br.close();	
+					symbolsExist = true;
+				} catch (IOException e) {
+					System.out.println("Failure to create file: symbols.txt ");
+					e.printStackTrace();
+				} catch (GeneralSecurityException e) {
+					e.printStackTrace();
+				}		
+			}else{
+				System.out.println("HASHPASS.txt exists.");
+			}
 
 			if( !symbolsExist ){			
 				try {
@@ -62,7 +93,6 @@ public class StockReader implements Runnable{
 				System.out.println("symbols.txt exists.");
 				//	if the symbols file does exist, then check to see that all the appropriate files exist as well
 
-
 				try {
 					ArrayList<String> symbols = new ArrayList<String>();
 					Scanner sc = new Scanner( new File("symbols.txt") );
@@ -70,6 +100,10 @@ public class StockReader implements Runnable{
 						symbols.add( sc.nextLine() );
 					}
 					sc.close();
+					
+					/**
+					 * NOTE: adding the hex of the encrypted files is what we want
+					 */
 
 					for( String symb : symbols ){
 						boolean fileCreated = false;
@@ -99,13 +133,10 @@ public class StockReader implements Runnable{
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-
 			}
-
 		}else{
 			System.out.println( "No DICE." );
 		}
-
 	}
 
 	/**
@@ -119,7 +150,10 @@ public class StockReader implements Runnable{
 				Scanner sc = new Scanner( new File("symbols.txt") );
 				ArrayList<String> symbols = new ArrayList<String>();
 				while( sc.hasNextLine() ){
-					symbols.add( sc.nextLine() );
+					String hex = sc.nextLine();
+					byte[] cipherBytes = hexStringToByteArray(hex);
+					String plaintext = decrypt(key, cipherBytes);
+					symbols.add( plaintext );
 				}
 				sc.close();
 
@@ -140,12 +174,14 @@ public class StockReader implements Runnable{
 						return -2;
 					}
 
-
-
 					//	write the new symbol to the file		
 					FileWriter fw = new FileWriter( new File("symbols.txt").getAbsolutePath(), true );
 					BufferedWriter br = new BufferedWriter( fw );
-					br.write( symb + "\n" );
+					
+					byte[] nonotme = encrypt(key, symb);
+					String yougotme = bytesToHex(nonotme);
+					
+					br.write(yougotme + "\n"); 
 					fw.flush();
 					br.flush();
 					fw.close();
@@ -163,19 +199,21 @@ public class StockReader implements Runnable{
 			return -1;
 		} catch (IOException e) {
 			return -1;
+		} catch (GeneralSecurityException e) {
+			return -1;
 		}
 
 	}
 
 	public String[] getStockSymbols(){
-
-
 		try {
 			ArrayList<String> symbols = new ArrayList<String>();
 			Scanner sc = new Scanner( new File("symbols.txt") );
 			while( sc.hasNextLine() ){
-				String tmp = sc.nextLine();
-				if( !tmp.isEmpty() ) symbols.add( tmp );
+				String hex = sc.nextLine();
+				byte[] cipherBytes = hexStringToByteArray(hex);
+				String plaintext = decrypt(key, cipherBytes);
+				if( !plaintext.isEmpty() ) symbols.add( plaintext );
 			}
 			sc.close();
 			
@@ -191,6 +229,8 @@ public class StockReader implements Runnable{
 			return ret;
 		} catch (FileNotFoundException e) {
 			return null;
+		} catch (GeneralSecurityException e) {
+			return null;
 		}
 	}
 
@@ -198,13 +238,21 @@ public class StockReader implements Runnable{
 		try {
 			buildFileList_TXT();	//	do a quick refresh
 			
+			//	get the hexstring of the plaintext symbol	
+			byte[] cipheredsymbol = encrypt(key, symb);
+			String hashedSymbol = bytesToHex(cipheredsymbol);
+			
 			String data = "";
 			for( File file : fileList ){
-				if( file.getName().contains(symb) ){
+				if( file.getName().contains(hashedSymbol) ){
 					Scanner sc = new Scanner( file );
 					while( sc.hasNextLine() ){
-						String s = sc.nextLine();
-						if( s != null && !s.isEmpty() ) data += s + ", ";
+						String hexStr = sc.nextLine();
+						byte[] cipherText = hexStringToByteArray(hexStr);
+						String plaintext = decrypt(key, cipherText);
+
+						if( plaintext != null && !plaintext.isEmpty() ) 
+							data += plaintext + ", ";
 					}
 					sc.close();
 					break;
@@ -212,6 +260,9 @@ public class StockReader implements Runnable{
 			}
 			return data;
 		} catch (FileNotFoundException e) {
+			return null;
+			//	e.printStackTrace();
+		} catch (GeneralSecurityException e) {
 			return null;
 			//	e.printStackTrace();
 		}
@@ -245,8 +296,11 @@ public class StockReader implements Runnable{
 			ArrayList<String> symbols = new ArrayList<String>();
 			Scanner sc = new Scanner( new File("symbols.txt") );
 			while( sc.hasNextLine() ){
-				String tmp = sc.nextLine();
-				if( !tmp.equals(symb) ) symbols.add( tmp );
+				String hexStr = sc.nextLine();
+				byte[] cipherText = hexStringToByteArray(hexStr);
+				String plaintext = decrypt(key, cipherText);
+				
+				if( !plaintext.equals(symb) ) symbols.add( plaintext );
 			}
 			sc.close();
 			
@@ -258,7 +312,9 @@ public class StockReader implements Runnable{
 			FileWriter fw = new FileWriter( symbolFile );
 			BufferedWriter br = new BufferedWriter( fw );
 			for( String s : symbols ){
-				br.write( s + "\n" );
+				byte[] nonotme = encrypt(key, s);
+				String yougotme = bytesToHex(nonotme);
+				br.write( yougotme + "\n" );
 			}
 			fw.flush();
 			br.flush();
@@ -280,6 +336,10 @@ public class StockReader implements Runnable{
 			return false;
 		} catch (IOException e) {
 			System.out.println("throw 2");
+			e.printStackTrace();
+			return false;
+		} catch (GeneralSecurityException e) {
+			System.out.println("throw 3 -- crypto throw");
 			e.printStackTrace();
 			return false;
 		}
@@ -410,9 +470,14 @@ public class StockReader implements Runnable{
 			String[] date2 = date.toString().split(" ");
 			date = date2[1] + " " + date2[2] + " " + date2[3];
 			
+			
+			String toFile = price + " " + date;
+			byte[] toFile_crypto = encrypt(key, toFile);
+			String toFile_hex = bytesToHex(toFile_crypto);
+			
 			FileWriter fw = new FileWriter( fname, true );
 			BufferedWriter br = new BufferedWriter( fw );
-			br.write( price + " " + date +"\n" );
+			br.write( toFile_hex +"\n" );
 			
 			fw.flush();
 			br.flush();
@@ -422,6 +487,65 @@ public class StockReader implements Runnable{
 			return true;
 		} catch (IOException e) {
 			return false;
+		} catch (GeneralSecurityException e) {
+			return false;
 		}
+	}
+	
+	/**
+	 * Methods below are for encrypting and decrypting data
+	 */
+	final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+	public static String bytesToHex(byte[] bytes) {
+	    char[] hexChars = new char[bytes.length * 2];
+	    for ( int j = 0; j < bytes.length; j++ ) {
+	        int v = bytes[j] & 0xFF;
+	        hexChars[j * 2] = hexArray[v >>> 4];
+	        hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+	    }
+	    return new String(hexChars);
+	}
+	
+	//http://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
+	public static byte[] hexStringToByteArray(String s) {
+	    int len = s.length();
+	    byte[] data = new byte[len / 2];
+	    for (int i = 0; i < len; i += 2) {
+	        data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+	                             + Character.digit(s.charAt(i+1), 16));
+	    }
+	    return data;
+	}
+	
+	public static byte[] encrypt(String key, String value)
+			throws GeneralSecurityException {
+
+		byte[] raw = key.getBytes(Charset.forName("US-ASCII"));
+		if (raw.length != 16) {
+			throw new IllegalArgumentException("Invalid key size.");
+		}
+
+		SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.ENCRYPT_MODE, skeySpec,
+				new IvParameterSpec(new byte[16]));
+		return cipher.doFinal(value.getBytes(Charset.forName("US-ASCII")));
+	}
+
+	public static String decrypt(String key, byte[] encrypted)
+			throws GeneralSecurityException {
+
+		byte[] raw = key.getBytes(Charset.forName("US-ASCII"));
+		if (raw.length != 16) {
+			throw new IllegalArgumentException("Invalid key size.");
+		}
+		SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
+
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.DECRYPT_MODE, skeySpec,
+				new IvParameterSpec(new byte[16]));
+		byte[] original = cipher.doFinal(encrypted);
+
+		return new String(original, Charset.forName("US-ASCII"));
 	}
 }

@@ -33,9 +33,9 @@ import javax.net.ssl.TrustManagerFactory;
 
 public class Server implements Runnable{
 
+	private final int port = 8010;
 	private ServerSocket serverSocket;
 	private ServerSocketFactory factory;
-	public final int port = 8010;
 	public StockReader reader;
 
 	public final String username = "hgruber";
@@ -56,12 +56,10 @@ public class Server implements Runnable{
 	 * This method creats a socket and listens
 	 */
 	public void run() {
-
-
 		try {
 			factory = ServerSocketFactory.getDefault();
-			//serverSocket = (ServerSocket) factory.createServerSocket(717);
-			serverSocket = new ServerSocket(port);
+			serverSocket = (ServerSocket) factory.createServerSocket(port);
+
 
 			while(true){
 				Socket welcome = serverSocket.accept();
@@ -77,11 +75,7 @@ public class Server implements Runnable{
 			System.out.println("Failed to create server socket");
 			e.printStackTrace();
 		}
-
 	}
-
-
-
 }
 
 class MessageParser implements Runnable {
@@ -203,7 +197,7 @@ class MessageParser implements Runnable {
 			int ret = server.reader.addStockSymbol(sa[1]);
 
 			if( ret == -2 ){
-				sendMsg( "202,, FALSE,, Stock " + sa[1] + " does not exist");
+				sendMsg( "202, FALSE,, Stock " + sa[1] + " does not exist");
 				System.out.println("SERVER: sending 202-0");
 			}
 			else if( ret == -1 ){
