@@ -25,7 +25,6 @@ public class StockReader implements Runnable{
 
 	private File[] fileList;
 	private final String key = "XvDIim9yVWPCc3Nj";
-	private String password;
 
 	private boolean symbolsExist = false,
 				hashpass = false;
@@ -62,8 +61,7 @@ public class StockReader implements Runnable{
 					digest.update(whome.getBytes("UTF-8"));
 					byte[] nonotme = digest.digest();
 					String yougotme = bytesToHex(nonotme);
-					br.write(yougotme + "\n"); 
-					password = yougotme;
+					br.write(yougotme + "\n");
 					
 					fw.flush();
 					br.flush();
@@ -79,7 +77,7 @@ public class StockReader implements Runnable{
 			}else{
 				System.out.println("HASHPASS.txt exists.");
 				// Read in the hashed password
-				password = readInPassword();
+				String password = readInPassword();
 				System.out.println("PASSWORD: " + password);
 			}
 
@@ -293,7 +291,7 @@ public class StockReader implements Runnable{
 	}
 	
 	public String getPassword() {
-		return this.password;
+		return readInPassword();
 	}
 	
 	public boolean resetStockData( String symb ){
