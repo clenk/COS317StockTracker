@@ -53,7 +53,7 @@ public class GenerateHash {
 	public static void main(String[] args){
 		try {
 			String key = "abcdefgh12345678";
-			String input = "FoxtrotMikeLima";
+			String input = "123.0 Hello World";
 			
 			byte[] cipherText = encrypt(key, input);
 			
@@ -63,7 +63,7 @@ public class GenerateHash {
 			System.out.println( input );
 			System.out.println( "hex(1): " + cipherStr );
 			
-			File f = new File("HASHPASS.txt");
+	/*		File f = new File("HASHPASS.txt");
 			DataOutputStream dos = new DataOutputStream(new FileOutputStream( f ));
 			dos.writeBytes(cipherStr);
 			dos.flush();
@@ -71,12 +71,12 @@ public class GenerateHash {
 			
 			
 			File f2 = new File("HASHPASS.txt");
-			Scanner sc = new Scanner( f2 );
-			String nuHex = sc.nextLine();
-			byte[] moarCipherText = hexStringToByteArray(nuHex);
+			Scanner sc = new Scanner( f2 );	*/
+	//		String nuHex = sc.nextLine();	
+	//		byte[] moarCipherText = hexStringToByteArray(nuHex);
+			byte[] moarCipherText = hexStringToByteArray(cipherStr);
 			
-			
-			System.out.println( "hex(2): " + nuHex );
+	//		System.out.println( "hex(2): " + nuHex );
 			
 			String plainText = decrypt(key, moarCipherText);
 			
@@ -91,9 +91,9 @@ public class GenerateHash {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		
-		} catch (IOException e) {
+	//	} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+	//		e.printStackTrace();
 		} catch (GeneralSecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

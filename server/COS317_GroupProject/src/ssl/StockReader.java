@@ -181,7 +181,8 @@ public class StockReader implements Runnable{
 					byte[] nonotme = encrypt(key, symb);
 					String yougotme = bytesToHex(nonotme);
 					
-					br.write(yougotme + "\n"); 
+					br.write(yougotme);
+					br.newLine();
 					fw.flush();
 					br.flush();
 					fw.close();
@@ -404,7 +405,11 @@ public class StockReader implements Runnable{
 				double price = -1.0;
 
 				try{
-					html = readHTML( s );
+					//	decrypt the stock symbol so we can go and get it
+					byte[] cipherBytes = hexStringToByteArray(s);
+					String plainSymb = decrypt(key, cipherBytes);
+					
+					html = readHTML( plainSymb );
 					price = price(html);
 					name = name(html);
 					//	System.out.println( s + " :: " + name );
@@ -412,7 +417,7 @@ public class StockReader implements Runnable{
 					//	System.out.printf("\t%s %.2f\n", s, price(html) );
 
 					String fname = s + ".txt";
-					System.out.println( s + " " + writeToFile( fname, s, price, date) );
+					System.out.println( s + "//" + plainSymb +" " + writeToFile( fname, s, price, date) );
 				} catch (Exception e){
 					System.out.println( "name: " + name + "\nprice: " + price );
 				}
@@ -477,7 +482,8 @@ public class StockReader implements Runnable{
 			
 			FileWriter fw = new FileWriter( fname, true );
 			BufferedWriter br = new BufferedWriter( fw );
-			br.write( toFile_hex +"\n" );
+			br.write( toFile_hex );
+			br.newLine();
 			
 			fw.flush();
 			br.flush();
