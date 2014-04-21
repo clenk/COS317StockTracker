@@ -34,7 +34,7 @@
     </ComboBox>
     <Label fx:id="DelResetLabel_fxid" layoutX="14.0" layoutY="521.0" text="Delete/Reset label" />
     <Label fx:id="connectLabel_fxid" layoutX="545.0" layoutY="386.0" text="Label" />
-    <TextField fx:id="username_fxid" layoutX="542.0" layoutY="231.0" prefWidth="200.0" text="hgruber" />
+    <TextField fx:id="username_fxid" layoutX="542.0" layoutY="231.0" prefWidth="200.0" text="" />
     <Label layoutX="542.0" layoutY="214.0" text="Username" />
     <Label layoutX="542.0" layoutY="256.0" text="Password" />
     <PasswordField fx:id="password_fxid" layoutX="542.0" layoutY="272.0" prefWidth="200.0" />

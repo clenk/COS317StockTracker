@@ -6,8 +6,10 @@
 
 package clientgui;
 
+import java.net.URL;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.JavaFXBuilderFactory;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -17,10 +19,14 @@ import javafx.stage.Stage;
  * @author moriarty
  */
 public class ClientGUI extends Application implements Runnable {
-    
+    private FXMLLoader fxmlLoader;
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
+        URL location = getClass().getResource("FXMLDocument.fxml");
+        fxmlLoader = new FXMLLoader();
+        fxmlLoader.setLocation(location);
+        fxmlLoader.setBuilderFactory(new JavaFXBuilderFactory());
+        Parent root = (Parent) fxmlLoader.load(location.openStream());
         
         Scene scene = new Scene(root);
         
@@ -28,6 +34,7 @@ public class ClientGUI extends Application implements Runnable {
         
         stage.setScene(scene);
         stage.show();
+        
     }
 
     /**
@@ -41,10 +48,15 @@ public class ClientGUI extends Application implements Runnable {
  //   public static void main(String[] args) {
  //       launch(args);
  //   }
-
+            
     @Override
     public void run() {
        launch();
     }
+    
+//    @Override  
+//    public void stop() {  
+//        ((MemoryController) fxmlLoader.getController()).haltSimulation();  
+//    } 
     
 }

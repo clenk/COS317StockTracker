@@ -166,6 +166,7 @@ public class FXMLDocumentController implements Initializable {
                 
                 InboundListener listener = new InboundListener(this, dis, dos);
                 Thread t20 = new Thread(listener);
+                t20.setDaemon(true);
                 t20.start();
                 
  
@@ -204,6 +205,9 @@ public class FXMLDocumentController implements Initializable {
     
     @FXML 
     protected void disconnectBtn_action(ActionEvent event) {
+        disconnect();
+    }
+    private void disconnect() {
         if( socket != null || socket.isConnected() ){
             try {
                 String goodbye = "500";
@@ -229,7 +233,6 @@ public class FXMLDocumentController implements Initializable {
             connectLabel_fxid.setText("Please connect");
         }
     }
-    
     @FXML 
     protected void refreshBtn_action(ActionEvent event) {   
         refreshStocks();
@@ -329,6 +332,7 @@ public class FXMLDocumentController implements Initializable {
                 dos.write(resetCrypt);
 
                 resetPwLabel_fxid.setText("Successfullly reset password");
+                disconnect();
             } catch (IOException ex) {
                 resetPwLabel_fxid.setText("Password reset exception.");
                 Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
@@ -442,7 +446,6 @@ public class FXMLDocumentController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         addMarkets();  
         setListener();
-        password_fxid.setText( "FoxtrotMikeLima" );
     }    
     
     public void setListener(){
