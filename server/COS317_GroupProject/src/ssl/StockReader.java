@@ -298,7 +298,10 @@ public class StockReader implements Runnable{
 		try {
 			buildFileList_TXT();	//	do a quick refresh
 			
-			File file = new File(symb+".txt");
+			byte[] cipherBytes = encrypt(key, symb);
+			String hexHash = bytesToHex(cipherBytes);
+			
+			File file = new File(hexHash+".txt");
 			FileWriter fw = new FileWriter( file );
 			BufferedWriter br = new BufferedWriter( fw );
 			fw.flush();
@@ -313,20 +316,26 @@ public class StockReader implements Runnable{
 		} catch (IOException e) {
 			return false;
 		//	e.printStackTrace();
+		} catch (GeneralSecurityException e) {
+		//	e.printStackTrace();
+			return false;
 		}
 	}
 	
 	public boolean deleteStockData( String symb ){
 		try {
+			//	stopgap, delete when fixed
+		//	resetStockData(symb);
+			//	Encrypt the plaintext symbol and do a straight comparison
+			byte[] cipherBytes = encrypt(key, symb);
+			String hexHash = bytesToHex(cipherBytes);
 			
 			ArrayList<String> symbols = new ArrayList<String>();
 			Scanner sc = new Scanner( new File("symbols.txt") );
 			while( sc.hasNextLine() ){
-				String hexStr = sc.nextLine();
-				byte[] cipherText = hexStringToByteArray(hexStr);
-				String plaintext = decrypt(key, cipherText);
+				String fileHexHash = sc.nextLine();
 				
-				if( !plaintext.equals(symb) ) symbols.add( plaintext );
+				if( !fileHexHash.equals(hexHash) ) symbols.add( fileHexHash );
 			}
 			sc.close();
 			
@@ -338,16 +347,14 @@ public class StockReader implements Runnable{
 			FileWriter fw = new FileWriter( symbolFile );
 			BufferedWriter br = new BufferedWriter( fw );
 			for( String s : symbols ){
-				byte[] nonotme = encrypt(key, s);
-				String yougotme = bytesToHex(nonotme);
-				br.write( yougotme + "\n" );
+				br.write( s + "\n" );
 			}
 			fw.flush();
 			br.flush();
 			fw.close();
 			br.close();	
 
-			File file = new File(symb+".txt");
+			File file = new File(hexHash+".txt");
 			file.setWritable(true);
 			System.gc();
 			boolean delete = file.delete();
